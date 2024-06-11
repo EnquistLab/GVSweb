@@ -1,0 +1,41 @@
+{
+  "name": "GVSweb",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3003",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "export": "next build && next export && node export.js",
+    "post-update": "echo \"codesandbox preview only, need an update\" && yarn upgrade --latest"
+  },
+  "dependencies": {
+    "@emotion/cache": "^11.11.0",
+    "@emotion/react": "^11.11.0",
+    "@emotion/server": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.11.16",
+    "@mui/material": "^5.13.6",
+    "axios": "^1.4.0",
+    "citation-js": "^0.6.9",
+    "file-saver": "^2.0.5",
+    "json2csv": "^6.0.0-alpha.2",
+    "leaflet": "^1.9.4",
+    "leaflet-defaulticon-compatibility": "^0.1.2",
+    "loadash": "^1.0.0",
+    "lodash": "^4.17.21",
+    "next": "^14.2.3",
+    "prop-types": "^15.8.1",
+    "punycode": "^2.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-dropzone": "^14.2.3",
+    "react-leaflet": "^4.2.1",
+    "react-papaparse": "^4.1.0"
+  },
+  "devDependencies": {
+    "eslint": "8.43.0",
+    "eslint-config-next": "^13.4.7"
+  }
+}
