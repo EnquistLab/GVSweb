@@ -1,100 +1,148 @@
-import { useState, useEffect } from 'react';
-import { Typography } from '@mui/material';
-import Cite from 'citation-js';
+import { React, useState, useEffect } from "react";
+import PropTypes from 'prop-types';
 
+import { Layout } from "../components/";
 import { requestCitations, requestMeta } from "../actions/";
 
-import {
-    Layout,
-    BibTexDialog
-} from "../components/";
+import Cite from "citation-js";
 
-export default function Index() {
-    let [groupedCitations, setGroupedCitations] = useState({});
-    let [metaState, setMetaState] = useState("");
+import {
+    Typography,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Link,
+} from "@mui/material";
+
+function BibTexDialog({ displayText }) {
+    const [open, setOpen] = useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    return (
+        <div>
+            <Link href="#" onClick={handleClickOpen}>
+                [bibtex]
+            </Link>
+            <Dialog maxWidth={"md"} fullWidth open={open} onClose={handleClose}>
+                <DialogTitle id="alert-dialog-title">{"BibTeX entry"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {displayText.split("\n").map((line, index) => {
+                            if ((index > 0) & (line !== "}")) {
+                                line = "\xa0\xa0\xa0\xa0" + line;
+                            }
+                            return (
+                                <span key={index}>
+                  {line}
+                                    <br />
+                </span>
+                            );
+                        })}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="primary">
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </div>
+    );
+}
+
+BibTexDialog.propTypes = {
+    displayText: PropTypes.string
+};
+
+function CiteApp() {
+    let [meta, setMeta] = useState({ code_version: '' });
+    let [citations, setCitations] = useState([]);
 
     useEffect(() => {
-        async function fetchCitations() {
-            let citationsResponse = await requestCitations();
-            let metaResponse = await requestMeta();
-            let acknowledgmentUsed = false; // Flag to track if acknowledgment header has been used
+        async function fetchData() {
+            let meta = await requestMeta();
+            setMeta(meta[0] || {});
 
-            let formattedCitations = citationsResponse.map(citation => {
-                let cleanedCitation = citation.citations.citation.replace(/\\n/g, " ");
-                let parsed = new Cite(cleanedCitation);
+            let citations = await requestCitations();
+            console.log(citations);
+            // console.log(citations);
+            let gvsPubCitations = [];
+            let gvsAppCitations = [];
+            let otherCitations = [];
 
-                let formatted = parsed.format('bibliography', {
-                    format: 'html',
-                    template: 'apa',
-                    lang: 'en-US'
-                });
-
-                return {
-                    source: citation.citations.source,
-                    parsed: parsed,
-                    raw: citation.citations.citation,
-                    formatted: formatted
-                };
+            // Group citations by 'gvs' and others
+            citations.forEach(citation => {
+                if (citation.source === "gvs.pub") {
+                    gvsPubCitations.push(citation);
+                } else if (citation.source === "gvs.app") {
+                    gvsAppCitations.push(citation);
+                } else {
+                    otherCitations.push(citation);
+                }
             });
 
-            // Group citations by source and manage headers
-            const groupedBySource = formattedCitations.reduce((acc, citation) => {
-                const source = citation.source;
-                if (!acc[source]) {
-                    acc[source] = {
-                        header: getHeaderForSource(source, acknowledgmentUsed),
-                        citations: []
-                    };
-                    // Ensure acknowledgment header is only used once
-                    if (acc[source].header === "Acknowledge the NSR data sources as follows:") {
-                        acknowledgmentUsed = true;
-                    }
-                }
-                acc[source].citations.push(citation);
-                return acc;
-            }, {});
-
-            setGroupedCitations(groupedBySource);
-
-            try {
-                setMetaState(metaResponse[0].meta.code_version);
-            } catch (error) {
-                console.log("Error getting metadata from API");
+            // Process citations for display
+            let processedCitations = [];
+            if (gvsPubCitations.length > 0) {
+                processedCitations.push({
+                    header: "If results derived from the GVS are used in a publication, please cite the GNRS publication:",
+                    citations: gvsPubCitations
+                });
             }
-        }
-        fetchCitations();
-    }, []);
+            if (gvsAppCitations.length > 0) {
+                processedCitations.push({
+                    header: "Please cite the GVS application:",
+                    citations: gvsAppCitations
+                });
+            }
+            if (otherCitations.length > 0) {
+                processedCitations.push({
+                    header: "Acknowledge the GVS data sources as follows:",
+                    citations: otherCitations
+                });
+            }
 
-    const getHeaderForSource = (source, acknowledgmentUsed) => {
-        if (source === 'nsr.pub') {
-            return "Please cite the NSR application itself:";
-        } else if (source === 'nsr.app') {
-            return "If results derived from the NSR are used in a publication, please cite the NSR publication:";
-        } else if (!acknowledgmentUsed) {
-            return "Acknowledge the NSR data sources as follows:";
+            // Format citations for display
+            setCitations(processedCitations.map(group => ({
+                header: group.header,
+                citations: group.citations.map(citation => {
+                    let parsed = new Cite(citation.citation);
+                    return parsed.format('bibliography', {
+                        format: 'html',
+                        template: 'apa',
+                        lang: 'en-US'
+                    });
+                })
+            })));
         }
-        return "";
-    };
+        fetchData();
+    }, []);
 
     return (
         <Layout>
             <Typography variant="h3" gutterBottom>
-                How to Cite the NSR
+                How to Cite the GVS
             </Typography>
 
-            {Object.keys(groupedCitations).map((source, index) => (
+            {citations.map((group, index) => (
                 <div key={index}>
-                    <Typography variant="h5" gutterBottom style={{marginTop: '20px', fontWeight: 'bold'}}>
-                        {groupedCitations[source].header}
+                    <Typography variant="h5" gutterBottom style={{fontWeight: 'bold'}}>
+                        {group.header}
                     </Typography>
-                    {groupedCitations[source].citations.map((citation, citationIndex) => (
+                    {group.citations.map((citation, citationIndex) => (
                         <div key={citationIndex}>
-                            <div
-                                dangerouslySetInnerHTML={{
-                                    __html: citation.formatted,
-                                }}
-                            ></div>
-                            <BibTexDialog displayText={citation.raw} />
+                            <div dangerouslySetInnerHTML={{ __html: citation }}></div>
+                            <BibTexDialog displayText={citation} />
                             <br />
                         </div>
                     ))}
@@ -105,8 +153,10 @@ export default function Index() {
                 API Version
             </Typography>
             <Typography variant="body1" gutterBottom>
-                {metaState}
+                {meta.code_version}
             </Typography>
         </Layout>
     );
 }
+
+export default CiteApp;

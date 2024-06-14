@@ -1,6 +1,14 @@
-import axios from 'axios';
+import axios from "axios";
 
 const apiEndPoint = process.env.apiEndPoint;
+
+/*
+  Response format:
+    col_name
+    ordinal_position
+    data_type
+    description
+*/
 
 export const requestDataDictionary = async () => {
     const parseObject = {
@@ -8,22 +16,12 @@ export const requestDataDictionary = async () => {
             mode: "dd",
         },
     };
-    return await axios
-        .post(apiEndPoint, parseObject, {
-            headers: { "Content-Type": "application/json" },
-        })
-        .then(response => response.data);
-};
 
-export const requestNativeStatusCodes = async () => {
-    const parseObject = {
-        opts: {
-            mode: "dd_ns",
-        },
-    };
     return await axios
         .post(apiEndPoint, parseObject, {
             headers: { "Content-Type": "application/json" },
         })
-        .then(response => response.data);
+        .then((response) => {
+            return response.data;
+        });
 };

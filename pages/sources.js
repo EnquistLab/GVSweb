@@ -1,64 +1,95 @@
-import { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Link,
-  Divider,
-  Container
-} from '@mui/material';
+import { Layout } from "../components";
+import { useState, useEffect, React } from "react";
+
 import { requestSources } from "../actions/";
-import { Layout } from "../components/";
 
-export default function Sources() {
-  const [sourcesState, setSourcesState] = useState([]);
+import {
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Box,
+  Divider,
+  Hidden,
+  Link,
+} from "@mui/material";
 
+const apiServer = process.env.apiServer;
+
+function SourcesApp() {
+
+  let [sourcesState, setSourcesState] = useState([]);
   useEffect(() => {
-    async function fetchSources() {
-      try {
-        const response = await requestSources();
-        // Assuming the response is the array itself, not wrapped in an additional object
-        setSourcesState(response);
-      } catch (error) {
-        console.error('Failed to fetch sources:', error);
-      }
+    async function fetchData() {
+      let sources = await requestSources();
+      setSourcesState(sources);
     }
-    fetchSources();
+    fetchData();
   }, []);
 
-  return (
-      <Layout>
-        <Container>
-          <Typography variant="h3" gutterBottom>
-            Sources
-          </Typography>
-          {sourcesState.map((item, index) => (
-              <Box key={index} sx={{ mt: 2 }}>
-                <Divider />
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="h6">
-                    {item.sources.source_name_full}
-                  </Typography>
-                  <Typography variant="subtitle1">
-                    Date Accessed: {item.sources.date_accessed}
-                  </Typography>
-                  {item.sources.is_comprehensive === "1" ? (
-                      <Typography variant="subtitle1">
-                        Comprehensive: Yes
-                      </Typography>
-                  ) : (
-                      <Typography variant="subtitle1">
-                        Comprehensive: No
-                      </Typography>
-                  )}
-                  {item.sources.source_url && (
-                      <Link href={item.sources.source_url} target="_blank" rel="noopener">
+
+  return <>
+    <Layout>
+      <Typography variant="h3" align="justify" display="block" gutterBottom>
+        Sources
+      </Typography>
+
+      <div id="currentsources">
+        <Typography variant="h5" gutterBottom align="justify">
+          Geographic data providers
+        </Typography>
+        <Typography variant="body2" gutterBottom align="justify">
+          {/* TODO: dynamic numbering here */}
+          The GVS the following sources of geographic and political division
+          names:
+        </Typography>
+
+        <List>
+          {sourcesState.map((s, k) => (
+              <div key={k}>
+                <ListItem>
+                  <Hidden xlDown>
+                    <ListItemIcon>
+                      <div>
+                        {/* FIXME: make this fit a small screen */}
+                        <img
+                            style={{ objectFit: "none" }}
+                            height="200"
+                            width="200"
+                            src={apiServer + s.logo_path}
+                        />
+                      </div>
+                    </ListItemIcon>
+                  </Hidden>
+                  <ListItemText>
+                    <Typography gutterBottom variant="h6" component="h2">
+                      {s.source_name_full} - {s.source_name.toUpperCase()}
+                    </Typography>
+                    <Typography variant="body2" component="p">
+                      {s.description} <br />
+                      <br />
+                      Date Accessed: {s.date_accessed}
+                    </Typography>
+                    <br />
+                    <Box>
+                      {/*<Link href={s.data_url} size="small" color="primary">*/}
+                      {/*  Data*/}
+                      {/*</Link>{" "}*/}
+                      {/*&nbsp;&nbsp;*/}
+                      <Link href={s.source_url} size="small" color="primary" target="_blank" rel="noopener noreferrer">
                         Learn More
                       </Link>
-                  )}
-                </Box>
-              </Box>
+                    </Box>
+                  </ListItemText>
+                </ListItem>
+              </div>
           ))}
-        </Container>
-      </Layout>
-  );
+        </List>
+      </div>
+    </Layout>
+  </>;
 }
+
+
+export default SourcesApp;

@@ -1,77 +1,36 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, React } from "react";
 import { Layout } from "../components/";
-import { requestDataDictionary, requestNativeStatusCodes } from "../actions/";
-import { Typography, Table, TableBody, TableContainer, TableHead, TableCell, TableRow } from "@mui/material";
+import { requestDataDictionary } from "../actions/";
+import { Typography } from "@mui/material";
+
+import {
+    Table,
+    TableBody,
+    TableContainer,
+    TableHead,
+    TableCell,
+    TableRow,
+} from "@mui/material";
 
 function DataDictionary() {
     const [dataDict, setDataDict] = useState([]);
-    const [nativeStatusCodes, setNativeStatusCodes] = useState([]);
-
+    // retrieve the version information
     useEffect(() => {
         async function fetchData() {
-            try {
-                const ddResponse = await requestDataDictionary();
-                const nsResponse = await requestNativeStatusCodes();
-                console.log(nsResponse);
-
-                if (ddResponse && Array.isArray(ddResponse)) {
-                    setDataDict(ddResponse.map(item => item.dd));
-                }
-                if (nsResponse && Array.isArray(nsResponse)) {
-                    setNativeStatusCodes(nsResponse.map(item => ({
-                        code: item.dd_ns.val,
-                        description: item.dd_ns.description
-                    })));
-                }
-            } catch (error) {
-                console.error('Failed to fetch data:', error);
-            }
+            let dd = await requestDataDictionary();
+            setDataDict(dd)
         }
         fetchData();
     }, []);
 
-
     return (
         <Layout>
-            <Typography variant="h2">Data Dictionary</Typography>
-            <br/>
-            <br/>
-            <Typography variant="h4" gutterBottom><strong>Native Status Codes</strong></Typography>
-            <hr/>
-            <TableContainer>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Status Code</TableCell>
-                            <TableCell>Description</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {nativeStatusCodes.length > 0 ? (
-                            nativeStatusCodes.map((code, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{code.code}</TableCell>
-                                    <TableCell>{code.description}</TableCell>
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={2} align="center">No data available</TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-
-            <br/>
-            <br/>
-
-            <Typography variant="h4" gutterBottom>
-                <strong>
-                    Definitions of NSR Results Fields
-                </strong>
+            <Typography variant='h3'>Data dictionary</Typography>
+            <br />
+            <Typography variant="body1" gutterBottom align="justify">
+                Names and definitions of output fields returned by the GVS.
             </Typography>
-            <hr/>
+            <br />
 
             <TableContainer>
                 <Table>
@@ -83,19 +42,19 @@ function DataDictionary() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {dataDict.length > 0 ? (
-                            dataDict.map((row, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{row.col_name}</TableCell>
-                                    <TableCell>{row.data_type}</TableCell>
-                                    <TableCell>{row.description}</TableCell>
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={3} align="center">No data available</TableCell>
+                        {dataDict.map((row) => (
+                            <TableRow key={row.col_name}>
+                                <TableCell>
+                                    {row.col_name}
+                                </TableCell>
+                                <TableCell>
+                                    {row.data_type}
+                                </TableCell>
+                                <TableCell>
+                                    {row.description}
+                                </TableCell>
                             </TableRow>
-                        )}
+                        ))}
                     </TableBody>
                 </Table>
             </TableContainer>
