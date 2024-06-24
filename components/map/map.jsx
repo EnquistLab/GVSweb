@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiZnVyeXkiLCJhIjoiY2x4amEzaThvMXA5cTJycjJqM3F6aXp4ZCJ9.mwcA3GbxOIq0RbnbCux3og';
+mapboxgl.accessToken = '(Mapbox Public Token)';
 
 const Map = ({ selectedCoordinate, coordinates, onMarkerClick }) => {
   const mapContainer = useRef(null);
