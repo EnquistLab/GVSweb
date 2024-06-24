@@ -1,7 +1,7 @@
+// index.js
 import { useState } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { resolveRecords } from "../actions/";
-
 import {
   Layout,
   SearchBox,
@@ -18,7 +18,6 @@ export default function Index() {
     setIsProcessing(false);
   }
 
-  // Format: latitude, longitude
   const handleResolveRecords = async (records) => {
     setResolvedRecords([]);
     setIsProcessing(true);

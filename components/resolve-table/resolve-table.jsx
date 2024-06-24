@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Box,
     TableContainer,
@@ -10,13 +10,12 @@ import {
     Table,
     Paper,
 } from "@mui/material";
-
 import DetailsDialog from "./resolve-details-dialog";
 import EnhancedTableHead from "./resolve-table-head";
 import TablePaginationActions from "./table-pagination-actions";
-
-import { DownloadResults, } from "../";
+import { DownloadResults } from "../";
 import { getComparator, stableSort } from "../../actions";
+import Map from "../map/map";
 
 export function ResolveTable({ tableData }) {
     const [dataPopUpOpen, setDataPopUpOpen] = useState(false);
@@ -25,6 +24,13 @@ export function ResolveTable({ tableData }) {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [orderBy, setOrderBy] = useState("");
     const [order, setOrder] = useState("asc");
+    const [selectedCoordinate, setSelectedCoordinate] = useState(null);
+    const [coordinates, setCoordinates] = useState([]);
+    const mapRef = useRef(null);
+
+    const isValidCoordinate = ({ latitude, longitude }) => {
+        return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+    };
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -45,22 +51,59 @@ export function ResolveTable({ tableData }) {
         setOrderBy(property);
     };
 
+    const handleCoordinateClick = (coord) => {
+        if (isValidCoordinate(coord)) {
+            setSelectedCoordinate(coord);
+            mapRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+            console.error("Invalid coordinate clicked:", coord);
+        }
+    };
+
+    const handleMarkerClick = (coord) => {
+        setPopUpDetails(coord.row);
+        setDataPopUpOpen(true);
+    };
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'OK':
+            case 'Possible centroid':
+                return 'green';
+            case 'In ocean':
+                return 'yellow';
+            default:
+                return 'red';
+        }
+    };
+
     const renderRow = (row, id) => {
         const coordinatesSubmitted = `${row.latitude_verbatim}, ${row.longitude_verbatim}`;
-        console.log(coordinatesSubmitted);
         const coordinatesResolved = `${row.latitude},${row.longitude}`;
         const centroid = row.centroid_poldiv ? `${row.centroid_poldiv} centroid` : "";
         const coordinatesStatus = row.latlong_err ? row.latlong_err : "OK";
+        const statusColor = getStatusColor(coordinatesStatus);
 
         return (
             <TableRow key={id}>
                 <TableCell>{coordinatesSubmitted}</TableCell>
-                <TableCell>{coordinatesResolved}</TableCell>
+                <TableCell>
+                    {coordinatesStatus === "OK" || coordinatesStatus === "Possible centroid" || coordinatesStatus === "In ocean" ? (
+                        <Link
+                            href="#"
+                            onClick={() => handleCoordinateClick({ latitude: row.latitude, longitude: row.longitude, status: coordinatesStatus, row })}
+                        >
+                            {coordinatesResolved}
+                        </Link>
+                    ) : (
+                        coordinatesResolved
+                    )}
+                </TableCell>
                 <TableCell>{row.country}</TableCell>
                 <TableCell>{row.state}</TableCell>
                 <TableCell>{row.county}</TableCell>
                 <TableCell>{centroid}</TableCell>
-                <TableCell>{coordinatesStatus}</TableCell>
+                <TableCell style={{ color: statusColor }}>{coordinatesStatus}</TableCell>
                 <TableCell>
                     <Link
                         href="#"
@@ -76,9 +119,19 @@ export function ResolveTable({ tableData }) {
         );
     };
 
-    if (tableData.length > 0)
-        return <>
+    useEffect(() => {
+        const allCoords = tableData
+            .map((row) => ({ latitude: row.latitude, longitude: row.longitude, status: row.latlong_err || "OK", row }))
+            .filter(coord => isValidCoordinate(coord));
+        setCoordinates(allCoords);
+    }, [tableData]);
+
+    return tableData.length > 0 ? (
+        <>
             <Paper>
+                <Box m={2} ref={mapRef}>
+                    <Map coordinates={coordinates} selectedCoordinate={selectedCoordinate} onMarkerClick={handleMarkerClick} />
+                </Box>
                 <Box pt={2} m={2} mb={0}>
                     <DownloadResults data={tableData} />
                 </Box>
@@ -114,6 +167,6 @@ export function ResolveTable({ tableData }) {
                     row={popUpDetails}
                 />
             </Paper>
-        </>;
-    else return <></>;
+        </>
+    ) : null;
 }

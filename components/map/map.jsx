@@ -1,125 +1,190 @@
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet'
-import React, { useState } from "react";
+import React, { useRef, useEffect, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
+import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 
-import 'leaflet/dist/leaflet.css'
-import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css'
-import "leaflet-defaulticon-compatibility";
-// import * as leaflet from "leaflet";
+mapboxgl.accessToken = 'pk.eyJ1IjoiZnVyeXkiLCJhIjoiY2x4amEzaThvMXA5cTJycjJqM3F6aXp4ZCJ9.mwcA3GbxOIq0RbnbCux3og';
 
-import world from './countries.geo.json'
-// with id from https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3
+const Map = ({ selectedCoordinate, coordinates, onMarkerClick }) => {
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const markers = useRef([]);
+  const [suspiciousCoordinate, setSuspiciousCoordinate] = useState(null);
+  let clickTimeout = null;
 
-import {
-  ChecklistsDialog,
-} from "../../components/";
-
-const Map = ({ checklistsByCountry, checklistsInfo, citations }) => {
-  const [open, setOpen] = useState(false);
-  const [checklistName, setChecklistName] = useState('')
-
-  const handleClickOpen = (checklist) => {
-    setChecklistName(checklist)
-    setOpen(true);
+  const isValidCoordinate = (coord) => {
+    if (!coord) return false;
+    const { latitude, longitude } = coord;
+    return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const getColor = (status) => {
+    if (status === 'OK' || status === 'Possible centroid') return 'green';
+    if (status === 'In ocean') return 'yellow';
+    return 'red';
   };
 
-  const getColor = (id) => {
-    if (id in checklistsByCountry) {
-      let length = checklistsByCountry[id].sources.split(',').length
-      return length == 1 ? "#D6D58E" :
-        length === 2 ? "#005C53" :
-          '#042940';
+  const handleMarkerClick = (coord) => {
+    if (!coord) return;
+    if (clickTimeout !== null) {
+      clearTimeout(clickTimeout);
+      clickTimeout = null;
+      if (typeof onMarkerClick === 'function') {
+        onMarkerClick(coord); // Double-click detected
+      }
+    } else {
+      clickTimeout = setTimeout(() => {
+        map.current.flyTo({
+          center: [coord.longitude, coord.latitude],
+          zoom: 15,
+          essential: true,
+        });
+        clickTimeout = null;
+      }, 300); // Single-click detected
     }
-  }
+  };
 
-  const geojsonFilter = (geojson) => {
-    if (geojson.id in checklistsByCountry) {
-      return true
-    }
-    return false
-  }
+  const addMarkers = () => {
+    markers.current.forEach(marker => marker.remove());
+    markers.current = [];
 
-  const geojsonStyle = (feature) => {
-    return {
-      "dashArray": '5',
-      "color": getColor(feature.id),
-      "weight": 2,
-      "opacity": 1
-    }
-  }
+    coordinates.forEach(coord => {
+      if (isValidCoordinate(coord)) {
+        const marker = new mapboxgl.Marker({ color: getColor(coord.status) })
+            .setLngLat([coord.longitude, coord.latitude])
+            .addTo(map.current);
 
-  // links are added manually everytime a new popup opens
-  const addLinks = () => {
-    const links = document.getElementsByClassName("popup-button-link");
-    if (links) {
-      for (let link of links) {
-        link.addEventListener("click", (e) => { handleClickOpen(e.target.innerText) });
+        marker.getElement().style.cursor = 'pointer'; // Ensure pointer cursor for clickable markers
+
+        marker.getElement().addEventListener('dblclick', () => {
+          handleMarkerClick(coord);
+        });
+
+        marker.getElement().addEventListener('click', () => {
+          handleMarkerClick(coord);
+        });
+
+        markers.current.push(marker);
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (map.current) return; // Initialize map only once
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/outdoors-v11', // Use a colorful style
+      center: [0, 0],
+      zoom: 2,
+      projection: 'globe' // Set the map projection to globe
+    });
+
+    map.current.on('style.load', () => {
+      map.current.setFog({
+        range: [1.0, 7.0],
+        color: 'white',
+        "horizon-blend": 0.1
+      });
+    });
+
+    map.current.addControl(
+        new MapboxGeocoder({
+          accessToken: mapboxgl.accessToken,
+          mapboxgl: mapboxgl
+        })
+    );
+
+    map.current.addControl(new mapboxgl.FullscreenControl());
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    const resetButton = document.createElement('button');
+    resetButton.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-reset';
+    resetButton.type = 'button';
+    resetButton.title = 'Reset Map';
+    resetButton.innerHTML = '🏠';
+    resetButton.onclick = () => {
+      map.current.flyTo({
+        center: [0, 0],
+        zoom: 2,
+      });
+    };
+
+    const resetControl = document.createElement('div');
+    resetControl.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+    resetControl.appendChild(resetButton);
+
+    map.current.addControl({
+      onAdd: function() {
+        return resetControl;
+      },
+      onRemove: function() {
+        resetControl.parentNode.removeChild(resetControl);
+      }
+    }, 'top-right');
+
+    // Add terrain control
+    const terrainControl = document.createElement('div');
+    terrainControl.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+
+    const terrainButton = document.createElement('button');
+    terrainButton.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-terrain';
+    terrainButton.type = 'button';
+    terrainButton.title = 'Toggle Terrain';
+    terrainButton.innerHTML = '🗺️';
+    terrainButton.onclick = () => {
+      const style = map.current.getStyle();
+      if (style.name === 'Mapbox Satellite Streets') {
+        map.current.setStyle('mapbox://styles/mapbox/outdoors-v11');
+      } else {
+        map.current.setStyle('mapbox://styles/mapbox/satellite-streets-v11');
+      }
+    };
+
+    terrainControl.appendChild(terrainButton);
+
+    map.current.addControl({
+      onAdd: function() {
+        return terrainControl;
+      },
+      onRemove: function() {
+        terrainControl.parentNode.removeChild(terrainControl);
+      }
+    }, 'top-right');
+
+    addMarkers();
+  }, []);
+
+  useEffect(() => {
+    addMarkers();
+  }, [coordinates]);
+
+  useEffect(() => {
+    if (selectedCoordinate && isValidCoordinate(selectedCoordinate)) {
+      if (selectedCoordinate.latitude === 0 && selectedCoordinate.longitude === 0) {
+        setSuspiciousCoordinate('Suspicious coordinate: (0,0)');
+      } else {
+        setSuspiciousCoordinate(null);
+        map.current.flyTo({
+          center: [selectedCoordinate.longitude, selectedCoordinate.latitude],
+          zoom: 15,
+          essential: true,
+        });
       }
     }
-  };
-
-  // links are also removed after the popup closes
-  const removeLinks = () => {
-    const links = document.getElementsByClassName("popup-button-link");
-    if (links) {
-      for (let link of links) {
-        link.removeEventListener("click", (e) => handleClickOpen(e.target.innerText));
-      }
-    }
-  };
-
-  const geojsonFeatures = (feature, layer) => {
-    if (checklistsByCountry[feature.id] !== undefined) {
-      let links = checklistsByCountry[feature.id].sources
-        .split(',')
-        .map((s) => '<a href="#" class="popup-button-link">' + s + '</a>')
-        .join(', ')
-
-      layer
-        .addEventListener('popupopen', addLinks)
-        .addEventListener('popupclose', removeLinks)
-        .bindPopup(
-          '<strong>' + checklistsByCountry[feature.id].country + '</strong><br>'
-          + 'Checklists available: '
-          + links
-        );
-    }
-  }
-
-
-  let center = [40.8054, -74.0241]
+  }, [selectedCoordinate]);
 
   return (
-    <>
-      <ChecklistsDialog
-        open={open}
-        onClose={handleClose}
-        checklistName={checklistName}
-        checklistsInfo={checklistsInfo}
-        citations={citations}
-      />
+      <div>
+        <div ref={mapContainer} style={{ height: '500px' }} />
+        {suspiciousCoordinate && (
+            <div style={{ color: 'red', textAlign: 'center', marginTop: '10px' }}>
+              {suspiciousCoordinate}
+            </div>
+        )}
+      </div>
+  );
+};
 
-      <MapContainer
-        key={1}
-        center={center}
-        zoom={4}
-        scrollWheelZoom={true}
-        // 64px is the size of the top bar
-        style={{ minHeight: "calc(100vh - 64px)", width: "100%" }}
-        worldCopyJump={true}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        <GeoJSON filter={geojsonFilter} data={world} onEachFeature={geojsonFeatures} style={geojsonStyle} />
-      </MapContainer>
-    </>
-  )
-}
-
-export default Map
+export default Map;
