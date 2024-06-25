@@ -5,15 +5,15 @@ import { Typography, Link } from "@mui/material";
 function About() {
     return (
         <Layout>
-            <Typography variant="h3">About the NSR</Typography>
+            <Typography variant="h3">About the GVS</Typography>
             <br />
 
             <Typography variant="body1" gutterBottom align="justify">
-                <Link href="#what-is">What is the NSR?</Link>
+                <Link href="#what-is">What is the GVS?</Link>
                 <br />
-                <Link href="#development">Project development</Link>
+                <Link href="#development">Project Development</Link>
                 <br />
-                <Link href="#code">Source code</Link>
+                <Link href="#code">Source Code</Link>
                 <br />
                 <Link href="#funding">Funding</Link>
                 <br />
@@ -22,60 +22,59 @@ function About() {
 
             <div id="what-is">
                 <Typography variant="h5" gutterBottom align="justify">
-                    What is the NSR?
+                    What is the GVS?
                 </Typography>
                 <Typography variant="body1" gutterBottom align="justify">
-                    The Native Species Resolver (NSR) is a tool for the detection of introduced
-                    (non-native) plant species occurrences. A species occurrence is an observation
-                    of a species at a particular location. Currently, the NSR checks native status
-                    within political divisions, at up to three levels: country (admin0), state/province
-                    (admin1), and county/parish (admin2). These checks are performed by looking up
-                    the species in country, state, and county plant species checklists. Currently
-                    available checklists consulted by the NSR are displayed on our
-                    <Link href="/map" target="_blank"> map page </Link>
-                    ; lists of the checklists available in each country are displayed by clicking
-                    on the country, and details of each checklist can be seen by clicking on an
-                    individual checklist in the popup.
+                    The Geocoordinate Validation Service (GVS) is a tool for the detection of errors in geographic coordinates.
+                    In addition to basic checks (such as ensuring that the submitted coordinate points are valid decimal geocoordinates
+                    and alerting users to points located in the ocean), the main purpose of the GVS is to detect and flag points which
+                    are likely centroids of political divisions (such as countries or states) or geographic units (such as islands)—as
+                    opposed to accurate geocoordinates such as those obtained from a GPS-enabled device. In biodiversity science,
+                    georeferenced organismal observations based on centroids are generally too inaccurate to be useful for most types
+                    of research, in particular species distribution modeling. It is therefore extremely important that such sources of
+                    error be detected and excluded prior to analysis. The GVS detects three types of commonly-used centroids: the geometric
+                    center of mass (using PostGIS function ST_Centroid), point-on-surface (ST_PointOnSurface), and bounding box (ST_Centroid
+                    plus ST_Envelope).
                     <br/><br/>
-                    Results returned by the NSR include the species
-                    name and political division submitted, a native status code, and explanation for
-                    why that code was assigned, and the checklist sources consulted. Additional
-                    information is displayed by clicking on the Details hyperlink. For more details on
-                    each field returned by the NSR, see our
-                    <Link href="/data_dictionary" target="_blank"> NSR Data Dictionary</Link>.
+                    In addition to basic error validation and centroid detection, the GVS also returns the country plus first- and second-level
+                    administrative divisions (plus their GADM identifiers) in which each point is located. This information can be used as part
+                    of an additional validation that checks if the declared political division (which typically accompanies biological observations
+                    from herbarium and museum specimens) matches the actual political division in which the point is located (as detected by the GVS).
+                    The GVS also calculates the inherent uncertainty due to the number of decimal places used in the verbatim coordinates.
                 </Typography>
             </div>
             <br/>
 
             <div id="development">
                 <Typography variant="h5" gutterBottom align="justify">
-                    Project development
+                    Project Development
                 </Typography>
                 <Typography variant="body1" align="justify">
-                    The NSR was developed by the Botanical Information and Ecology Network (BIEN)
-                    as a data validation tool for the BIEN botanical observation database.
+                    The GVS was developed by the Botanical Information and Ecology Network (BIEN) as a data validation tool for the BIEN botanical observation database.
                     <br/>
                     <br/><strong>Project conception and direction</strong><br/>
                     Brad Boyle at <Link href="https://eeb.arizona.edu" target="_blank">University of Arizona</Link><br/>
+                    Brian Maitner at <Link href="https://www.usf.edu" target="_blank">University of South Florida, St. Petersburg</Link><br/>
+                    Dan Park at <Link href="https://www.purdue.edu" target="_blank">Purdue University</Link><br/>
                     Brian Enquist at <Link href="https://eeb.arizona.edu" target="_blank">University of Arizona</Link><br/>
                     <br/>
-                    <strong>Application development</strong><br/>
-                    Brad Boyle: <Link href="https://github.com/EnquistLab/NSRweb" target="_blank">NSR database, search engine and api.</Link><br/>
-                    Brian Maitner: <Link href="https://github.com/EnquistLab/NSRweb" target="_blank">RNSR R package.</Link><br/>
-                    George C. Barbosa: <Link href="https://github.com/EnquistLab/NSRweb" target="_blank">NSRweb React/Node.js user interface.</Link><br/>
-                    Rethvick Sriram Yugendra Babu: <Link href="https://github.com/EnquistLab/NSRweb" target="_blank">NSRweb React/Node.js user interface.</Link>
+                    <strong>Application development & Source</strong><br/>
+                    Brad Boyle: <Link href="https://github.com/ojalaquellueva/gvs" target="_blank">GVS database, search engine, and API.</Link><br/>
+                    Brian Maitner: <Link href="https://github.com/EnquistLab/RCDS" target="_blank">RCDS R package.</Link><br/>
+                    Rethvick Sriram Yugendra Babu: <Link href="https://github.com/EnquistLab/GVSweb" target="_blank">GVSweb React/Node.js user interface.</Link>
                 </Typography>
                 <br />
             </div>
 
             <div id="code">
                 <Typography variant="h5" gutterBottom align="justify">
-                    Source code
+                    Source Code
                 </Typography>
                 <Typography variant="body1" gutterBottom align="justify">
-                    Source code for all NSR components is publicly available from the following repositories:<br/><br/>
-                    NSR Search Engine, Database, and API: <Link href="https://github.com/ojalaquellueva/nsr" target="_blank">https://github.com/ojalaquellueva/nsr</Link> <br/>
-                    RNSR R package: <Link href="https://github.com/EnquistLab/RNSR" target="_blank">https://github.com/EnquistLab/RNSR</Link>.
+                    Source code for all GVS components is publicly available from the following repositories:<br/><br/>
+                    GVS Search Engine, Database, and API: <Link href="https://github.com/ojalaquellueva/gvs" target="_blank">https://github.com/ojalaquellueva/gvs</Link><br/>
+                    RCDS R package: <Link href="https://github.com/EnquistLab/RCDS" target="_blank">https://github.com/EnquistLab/RCDS</Link><br/>
+                    GVS web user interface: <Link href="https://github.com/EnquistLab/GVSweb" target="_blank">https://github.com/EnquistLab/GVSweb</Link>
                 </Typography>
             </div>
 
@@ -84,10 +83,8 @@ function About() {
                     Funding
                 </Typography>
                 <Typography variant="body1" align="justify">
-                    Funding provided by the National Science Foundation Plant Cyberinfrastructure Program
-                    (grant #DBI-0735191) and National Science Foundation Harnessing the Data Revolution
-                    Grant HDR 1934790 to Brian J. Enquist. Ongoing support by the National Center for Ecological
-                    Analysis and Synthesis (NCEAS) at University of California, Santa Barbara.
+                    Funding provided by the National Science Foundation Harnessing the Data Revolution Grant HDR 1934790 to Brian J. Enquist. Ongoing support from the
+                    National Center for Ecological Analysis and Synthesis (NCEAS) at University of California, Santa Barbara.
                 </Typography>
             </div>
         </Layout>
