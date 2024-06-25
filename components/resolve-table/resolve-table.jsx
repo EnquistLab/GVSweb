@@ -122,7 +122,7 @@ export function ResolveTable({ tableData }) {
     useEffect(() => {
         const allCoords = tableData
             .map((row) => ({ latitude: row.latitude, longitude: row.longitude, status: row.latlong_err || "OK", row }))
-            .filter(coord => isValidCoordinate(coord));
+            .filter(coord => isValidCoordinate(coord) && (coord.status === 'OK' || coord.status === 'Possible centroid' || coord.status === 'In ocean'));
         setCoordinates(allCoords);
     }, [tableData]);
 
