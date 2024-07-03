@@ -26,6 +26,7 @@ export function ResolveTable({ tableData }) {
     const [order, setOrder] = useState("asc");
     const [selectedCoordinate, setSelectedCoordinate] = useState(null);
     const [coordinates, setCoordinates] = useState([]);
+    const [initialCenter, setInitialCenter] = useState([0, 0]);
     const mapRef = useRef(null);
 
     const isValidCoordinate = ({ latitude, longitude }) => {
@@ -68,10 +69,11 @@ export function ResolveTable({ tableData }) {
     const getStatusColor = (status) => {
         switch (status) {
             case 'OK':
-            case 'Possible centroid':
                 return 'green';
             case 'In ocean':
-                return 'yellow';
+            case 'Possible centroid':
+            case 'Possibly erroneous centroid':
+                return 'orange';
             default:
                 return 'red';
         }
@@ -79,7 +81,7 @@ export function ResolveTable({ tableData }) {
 
     const renderRow = (row, id) => {
         const coordinatesSubmitted = `${row.latitude_verbatim}, ${row.longitude_verbatim}`;
-        const coordinatesResolved = `${row.latitude},${row.longitude}`;
+        const coordinatesResolved = (row.latitude && row.longitude) ? `${row.latitude},${row.longitude}` : "";
         const centroid = row.centroid_poldiv ? `${row.centroid_poldiv} centroid` : "";
         const coordinatesStatus = row.latlong_err ? row.latlong_err : "OK";
         const statusColor = getStatusColor(coordinatesStatus);
@@ -124,13 +126,17 @@ export function ResolveTable({ tableData }) {
             .map((row) => ({ latitude: row.latitude, longitude: row.longitude, status: row.latlong_err || "OK", row }))
             .filter(coord => isValidCoordinate(coord) && (coord.status === 'OK' || coord.status === 'Possible centroid' || coord.status === 'In ocean'));
         setCoordinates(allCoords);
+
+        if (allCoords.length > 0) {
+            setInitialCenter([allCoords[0].longitude, allCoords[0].latitude]);
+        }
     }, [tableData]);
 
     return tableData.length > 0 ? (
         <>
             <Paper>
                 <Box m={2} ref={mapRef}>
-                    <Map coordinates={coordinates} selectedCoordinate={selectedCoordinate} onMarkerClick={handleMarkerClick} />
+                    <Map coordinates={coordinates} selectedCoordinate={selectedCoordinate} onMarkerClick={handleMarkerClick} initialCenter={initialCenter} />
                 </Box>
                 <Box pt={2} m={2} mb={0}>
                     <DownloadResults data={tableData} />
