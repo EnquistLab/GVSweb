@@ -15,16 +15,16 @@ function NSRFooter() {
             alignItems="flex-start"
           >
             <Box display="flex" alignItems="left">
-              <img src="/favicon.ico" height="80"></img>
+              <img src="/android-chrome-512x512.png" height="150"></img>
               <Box>
-                <Typography variant="h3">GVS</Typography>
+                <Typography variant="h1">GVS</Typography>
                 <Typography variant="h6">
                   Geocoordinate Validation Service
                 </Typography>
               </Box>
             </Box>
             <Box mt={1}>
-              An online tool for the detection of introduced species occurrences.
+              An online tool for the correction of geo-coordinates.
             </Box>
           </Box>
         </Box>

@@ -19,10 +19,10 @@ import { ContainerLG } from "../";
 export function TopBar() {
   const menuLinks = [
     { href: '/', name: 'Home' },
-    { href: '/map', name: 'Map' },
+    // { href: '/map', name: 'Map' },
     { href: '/about', name: 'About' },
     { href: '/instructions', name: 'Instructions' },
-    { href: '/nsrapi', name: 'API' },
+    { href: '/gvsapi', name: 'API' },
     { href: '/sources', name: 'Sources' },
     { href: '/cite', name: 'Cite' },
     { href: '/data_dictionary', name: 'Data Dictionary' },
@@ -44,7 +44,9 @@ export function TopBar() {
         <ContainerLG>
           <Toolbar>
             <Box mr={2}>
-              <img href="/" height="40" src="/favicon.ico"/>
+              <Link href="/" color="inherit" underline="none">
+              <img href="/" height="50" src="/android-chrome-192x192.png"/>
+              </Link>
               {/*<GrassIcon />*/}
             </Box>
 

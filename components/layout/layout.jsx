@@ -7,14 +7,14 @@ export function Layout(props) {
   return (
     <>
         <Head>
-            <script async src="https://www.googletagmanager.com/gtag/js?id=G-"></script>
+            <script async src="https://www.googletagmanager.com/gtag/js?id=G-KPGY6EN8HD"></script>
             <script
                 dangerouslySetInnerHTML={{
                     __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'G-');
+              gtag('config', 'G-KPGY6EN8HD');
             `
                 }}
             />
