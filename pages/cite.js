@@ -95,7 +95,7 @@ function CiteApp() {
             let processedCitations = [];
             if (gvsPubCitations.length > 0) {
                 processedCitations.push({
-                    header: "If results derived from the GVS are used in a publication, please cite the GNRS publication:",
+                    header: "If results derived from the GVS are used in a publication, please cite the GVS publication:",
                     citations: gvsPubCitations
                 });
             }
