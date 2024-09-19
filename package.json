@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "next build && next export && node export.js",
+    "export": "next build && node export.js",
     "post-update": "echo \"codesandbox preview only, need an update\" && yarn upgrade --latest"
   },
   "dependencies": {
@@ -15,6 +15,7 @@
     "@emotion/react": "^11.11.0",
     "@emotion/server": "^11.11.0",
     "@emotion/styled": "^11.11.0",
+    "@mapbox/mapbox-gl-geocoder": "^5.0.2",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.6",
     "axios": "^1.4.0",
@@ -25,7 +26,8 @@
     "leaflet-defaulticon-compatibility": "^0.1.2",
     "loadash": "^1.0.0",
     "lodash": "^4.17.21",
-    "next": "^14.2.3",
+    "mapbox-gl": "^3.4.0",
+    "next": "^14.2.12",
     "prop-types": "^15.8.1",
     "punycode": "^2.3.1",
     "react": "^18.3.1",
